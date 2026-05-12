@@ -92,7 +92,7 @@ export default function ProjectsTab() {
 
   useEffect(() => {
     dispatch(fetchProjects());
-  }, []);
+  }, [dispatch]);
 
   const handleAdd = async (project: Partial<Project>) => {
     try {

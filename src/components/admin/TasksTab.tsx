@@ -21,7 +21,7 @@ function TaskForm({
   useEffect(() => {
     dispatch(fetchProjects());
     dispatch(fetchUsers());
-  }, []);
+  }, [dispatch]);
 
   const projects = useSelector((state: RootState) => state.projects.projects);
   const { users } = useSelector((state: RootState) => state.users);
@@ -161,7 +161,7 @@ export default function TasksTab() {
   useEffect(() => {
     dispatch(fetchTasks());
     dispatch(fetchUsers());
-  }, []);
+  }, [dispatch]);
 
   const getUserName = (id: number | null) => {
     if (!id) return "-";

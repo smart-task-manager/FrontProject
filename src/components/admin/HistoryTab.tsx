@@ -15,7 +15,7 @@ export default function HistoryTab() {
     dispatch(fetchTasks());
     dispatch(fetchSubTasks());
     dispatch(fetchUsers());
-  }, []);
+  }, [dispatch]);
 
   const completedTasks = tasks.filter((t: any) => (t.status ?? t.Status) === 2).length;
   const inProgressTasks = tasks.filter((t: any) => (t.status ?? t.Status) === 1).length;

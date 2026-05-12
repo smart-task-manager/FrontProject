@@ -43,7 +43,6 @@ const MyTasks: React.FC = () => {
   }, [dispatch]);
 
 const handleOpenTask = (task: Task) => {
-  console.log("selectedTask.Id:", task.Id);  // ✅
   setSelectedTask(task);
   dispatch(fetchSubTasks());
 };
@@ -71,10 +70,7 @@ const myTasks = (user ? tasks.filter(t => t.AssignedTo !== null && t.AssignedTo 
     .filter(t => statusFilter === 'all' || t.Status === Number(statusFilter));
 
 const currentSubTasks = selectedTask
-  ? subTasks.filter((st: any) => {
-      console.log("subTask:", st);  
-      return (st.taskId || st.TaskId) === selectedTask.Id;
-    })
+  ? subTasks.filter((st: any) => (st.taskId || st.TaskId) === selectedTask.Id)
   : [];
 
   return (

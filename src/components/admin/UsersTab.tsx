@@ -12,7 +12,7 @@ export default function UsersTab() {
 
   useEffect(() => {
     dispatch(fetchUsers());
-  }, []);
+  }, [dispatch]);
 
   const handleDeactivate = async (user: any) => {
     try {

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import type { RootState, AppDispatch } from "./store";
@@ -35,26 +35,16 @@ function HomeRedirect() {
 
 function App() {
   const dispatch = useDispatch<AppDispatch>();
-  const { token } = useSelector((state: RootState) => state.auth);
-  const [authReady, setAuthReady] = useState(false);
+  const { token, isInitialized } = useSelector((state: RootState) => state.auth);
 
   // אחרי רענון — משחזר את היוזר לפי ה-token
   useEffect(() => {
-    let isMounted = true;
-    if (token) {
-      Promise.resolve(dispatch(fetchMe()))
-        .finally(() => {
-          if (isMounted) setAuthReady(true);
-        });
-    } else {
-      setAuthReady(true);
+    if (token && !isInitialized) {
+      dispatch(fetchMe());
     }
-    return () => {
-      isMounted = false;
-    };
-  }, [dispatch, token]);
+  }, [dispatch, isInitialized, token]);
 
-  if (!authReady) return <div className="loading">טוען...</div>;
+  if (!isInitialized) return <div className="loading">טוען...</div>;
 
   return (
     <BrowserRouter>

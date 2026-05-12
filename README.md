@@ -1,73 +1,96 @@
-# React + TypeScript + Vite
+# Task Management Client
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+אפליקציית React לניהול פרויקטים, משימות, תתי משימות ועובדים. הפרויקט מיועד לצד הלקוח ומתחבר לשרת C# דרך REST API באמצעות axios.
 
-Currently, two official plugins are available:
+## יכולות מרכזיות
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- הרשמה והתחברות משתמשים.
+- שמירת token ושחזור משתמש אחרי רענון הדף.
+- הפרדה בין משתמש רגיל למנהל.
+- הגנה על דפים לפי התחברות והרשאה.
+- לוח משימות למשתמש רגיל, כולל לקיחת משימה וצפייה בתתי משימות.
+- פאנל מנהל לניהול פרויקטים, משימות, תתי משימות ועובדים.
+- הצגת סטטיסטיקות וביצועי עובדים.
+- ולידציה בטפסים, הודעות שגיאה, loading states והודעות הצלחה.
+- ניהול state מרכזי באמצעות Redux Toolkit.
+- ניתוב עמודים באמצעות React Router.
 
-## React Compiler
+## טכנולוגיות
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- React
+- TypeScript
+- Vite
+- Redux Toolkit
+- React Redux
+- React Router
+- Axios
+- ESLint
 
-## Expanding the ESLint configuration
+## דרישות מקדימות
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- Node.js 20.19 ומעלה, או Node.js 22.12 ומעלה.
+- שרת API פעיל בכתובת ברירת המחדל:
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```text
+http://localhost:5170/api
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+אפשר לשנות את כתובת השרת באמצעות קובץ `.env`.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## התקנה והרצה
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
+npm run dev
 ```
+
+בדיקת build:
+
+```bash
+npm run build
+```
+
+בדיקת lint:
+
+```bash
+npm run lint
+```
+
+## הגדרת API
+
+צור קובץ `.env` בשורש הפרויקט במידת הצורך:
+
+```env
+VITE_API_URL=http://localhost:5170/api
+```
+
+קיים קובץ `.env.example` עם דוגמה להגדרה.
+
+## מבנה הפרויקט
+
+```text
+src/
+  components/
+    admin/
+    dashboard/
+    my-tasks/
+    ui/
+  pages/
+  services/
+  store/
+    slices/
+  types/
+```
+
+## מסכים עיקריים
+
+- `/login` - התחברות.
+- `/register` - הרשמה.
+- `/dashboard` - לוח משימות למשתמש רגיל.
+- `/my-tasks` - המשימות שלי.
+- `/profile` - פרטי המשתמש המחובר.
+- `/admin` - פאנל ניהול למנהל בלבד.
+
+## הערות
+
+הפרויקט משתמש ב־JWT token שנשמר ב־localStorage ונשלח אוטומטית לכל בקשת API דרך axios interceptor.

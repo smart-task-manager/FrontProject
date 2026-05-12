@@ -23,7 +23,7 @@ function SubTaskForm({
   useEffect(() => {
     dispatch(fetchTasks());
     dispatch(fetchUsers());
-  }, []);
+  }, [dispatch]);
 
   const [title, setTitle] = useState(initialData?.title || initialData?.Title || "");
   const [description, setDescription] = useState(initialData?.description || initialData?.Description || "");
@@ -133,7 +133,7 @@ export default function SubTasksTab() {
   useEffect(() => {
     dispatch(fetchSubTasks());
     dispatch(fetchUsers());
-  }, []);
+  }, [dispatch]);
 
   const getUserName = (id: number | null) => {
     if (!id) return "-";

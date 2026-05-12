@@ -51,7 +51,6 @@ export const updateTask = createAsyncThunk(
           startedAt: task.StartedAt,
           deadline: task.Deadline,
         };
-        console.log("sending task:", mapped);  
         const response = await API.put(`/TaskItem/${task.Id}`, mapped); 
         return response.data;
       } catch (err: any) {
