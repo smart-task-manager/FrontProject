@@ -6,6 +6,7 @@ import { fetchUsers } from "../../store/slices/usersSlice";
 import { fetchProjects } from "../../store/slices/projectSlice";
 import { useToast } from "../ui/Toast";
 import { getErrorMessage } from "./utils";
+import ErrorMessage from "../ui/ErrorMessage";
 
 function TaskForm({
   onSubmit,
@@ -82,7 +83,7 @@ function TaskForm({
 
   return (
     <form onSubmit={handleSubmit}>
-      {formError && <div style={{ color: "#dc2626", marginBottom: "10px" }}>{formError}</div>}
+      {formError && <ErrorMessage message={formError} title="בדיקת הטופס נכשלה" compact />}
       <div className="form-group">
         <label className="form-label">כותרת</label>
         <input className="form-input" value={title} onChange={(e) => setTitle(e.target.value)} required />
@@ -202,7 +203,7 @@ export default function TasksTab() {
   };
 
   if (loading) return <div className="loading">טוען...</div>;
-  if (error) return <p style={{ color: "red" }}>{error}</p>;
+  if (error) return <ErrorMessage message={error} title="טעינת המשימות נכשלה" />;
 
   return (
     <div>

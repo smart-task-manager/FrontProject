@@ -1,13 +1,15 @@
 import React, { useState } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 
-import type { AppDispatch } from "../store";
+import type { AppDispatch, RootState } from "../store";
 import { register, fetchMe } from "../store/slices/authSlice";
+import ErrorMessage from "../components/ui/ErrorMessage";
 
 function Register() {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
+  const { loading, error } = useSelector((state: RootState) => state.auth);
 
   const [nameUser, setNameUser] = useState("");
   const [email, setEmail] = useState("");
@@ -126,8 +128,9 @@ function Register() {
             />
             {errors.confirmPassword && <p style={styles.errorMsg}>{errors.confirmPassword}</p>}
           </div>
-          <button type="submit" style={styles.button}>
-            הירשם
+          {error && <ErrorMessage message={error} title="ההרשמה נכשלה" compact />}
+          <button type="submit" style={styles.button} disabled={loading}>
+            {loading ? "נרשם..." : "הירשם"}
           </button>
         </form>
         <p style={styles.footer}>

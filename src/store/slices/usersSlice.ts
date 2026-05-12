@@ -22,12 +22,33 @@ export const fetchUsers = createAsyncThunk(
 export const deactivateUser = createAsyncThunk(
   "users/deactivate",
   async (user: User, { rejectWithValue }) => {
+    const userId = (user as any).id ?? user.Id;
+    if (!userId) {
+      return rejectWithValue("לא נמצא מזהה עובד למחיקה");
+    }
+
     try {
-      const updatedUser = { ...user, IsActive: false };
-      const response = await API.put(`/User/${user.Id}`, updatedUser);
-      return response.data;
+      await API.delete(`/User/${userId}`);
+      return { id: userId, deleted: true };
     } catch (err: any) {
-      return rejectWithValue(getErrorMessage(err, "שגיאה בהשבתת עובד"));
+      const status = err?.response?.status;
+      if (status !== 404 && status !== 405) {
+        return rejectWithValue(getErrorMessage(err, "שגיאה במחיקת עובד"));
+      }
+    }
+
+    try {
+      const updatedUser = {
+        ...user,
+        id: userId,
+        Id: userId,
+        isActive: false,
+        IsActive: false,
+      };
+      const response = await API.put(`/User/${userId}`, updatedUser);
+      return { ...response.data, id: userId, Id: userId, deleted: false };
+    } catch (err: any) {
+      return rejectWithValue(getErrorMessage(err, "שגיאה במחיקת עובד"));
     }
   }
 );
@@ -57,9 +78,16 @@ const usersSlice = createSlice({
         state.error = (action.payload as string) || action.error.message || "שגיאה בטעינת משתמשים";
       })
       .addCase(deactivateUser.fulfilled, (state, action) => {
-        const index = state.users.findIndex(u => u.Id === action.payload.Id);
-        if (index !== -1) state.users[index] = action.payload;
-      })
+        const payload = action.payload as any;
+        const payloadId = payload.id ?? payload.Id;
+        const index = state.users.findIndex((u: any) => (u.id ?? u.Id) === payloadId);
+
+        if (index !== -1 && payload.deleted) {
+          state.users.splice(index, 1);
+        } else if (index !== -1) {
+          state.users[index] = payload;
+        }
+      });
   },
 });
 

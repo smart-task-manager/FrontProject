@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import type { AppDispatch, RootState } from "../store";
 import { Link } from "react-router-dom";
 import { login, fetchMe } from "../store/slices/authSlice";
+import ErrorMessage from "../components/ui/ErrorMessage";
 
 
 
@@ -98,7 +99,7 @@ function Login() {
           />
           {errors.password && <p className="form-error">{errors.password}</p>}
         </div>
-        {error && <p className="form-error">{error}</p>}
+        {error && <ErrorMessage message={error} title="ההתחברות נכשלה" compact />}
         <button className="btn btn-primary" style={{width:"100%"}} type="submit" disabled={loading}>
           {loading ? "מתחבר..." : "התחבר"}
         </button>

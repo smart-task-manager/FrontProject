@@ -5,6 +5,7 @@ import type { RootState, AppDispatch } from '../store';
 import { fetchTasks } from '../store/slices/tasksSlice';
 import { fetchSubTasks, updateSubTask } from '../store/slices/subTasksSlice';
 import type { Task } from '../types';
+import ErrorMessage from "../components/ui/ErrorMessage";
 import SuccessToast from "../components/my-tasks/SuccessToast";
 import SubTasksModal from "../components/my-tasks/SubTasksModal";
 import TaskCard from "../components/my-tasks/TaskCard";
@@ -29,14 +30,15 @@ const MyTasks: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
 
-  const { tasks } = useSelector((state: RootState) => state.tasks);
-  const { subTasks, loading: subLoading } = useSelector((state: RootState) => state.subTasks);
+  const { tasks, error: tasksError } = useSelector((state: RootState) => state.tasks);
+  const { subTasks, loading: subLoading, error: subTasksError } = useSelector((state: RootState) => state.subTasks);
   const { user } = useSelector((state: RootState) => state.auth);
 
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   useEffect(() => {
     dispatch(fetchTasks());
@@ -48,18 +50,23 @@ const handleOpenTask = (task: Task) => {
 };
 
 const handleUpdateSubTaskStatus = async (subTask: any, newStatus: number) => {
-  await dispatch(updateSubTask({
-    Id: subTask.id || subTask.Id,
-    TaskId: subTask.taskId || subTask.TaskId,
-    TaskName: subTask.taskName || subTask.TaskName,
-    Title: subTask.title || subTask.Title,
-    Description: subTask.description || subTask.Description,
-    AssignedTo: subTask.assignedTo || subTask.AssignedTo,
-    Status: newStatus,
-  } as any));
-  await dispatch(fetchTasks());
-  setSuccessMsg('הסטטוס עודכן בהצלחה');
-  setTimeout(() => setSuccessMsg(null), 3000);
+  try {
+    await dispatch(updateSubTask({
+      Id: subTask.id || subTask.Id,
+      TaskId: subTask.taskId || subTask.TaskId,
+      TaskName: subTask.taskName || subTask.TaskName,
+      Title: subTask.title || subTask.Title,
+      Description: subTask.description || subTask.Description,
+      AssignedTo: subTask.assignedTo || subTask.AssignedTo,
+      Status: newStatus,
+    } as any)).unwrap();
+    await dispatch(fetchTasks());
+    setErrorMsg(null);
+    setSuccessMsg('הסטטוס עודכן בהצלחה');
+    setTimeout(() => setSuccessMsg(null), 3000);
+  } catch (err: any) {
+    setErrorMsg(typeof err === "string" ? err : "לא הצלחנו לעדכן את סטטוס תת המשימה");
+  }
 };
 
 const totalMyTasks = user ? tasks.filter(t => t.AssignedTo !== null && t.AssignedTo === ((user as any).id || (user as any).Id)).length : 0;
@@ -76,6 +83,9 @@ const currentSubTasks = selectedTask
   return (
     <div style={containerStyle}>
       {successMsg && <SuccessToast message={successMsg} onClose={() => setSuccessMsg(null)} />}
+      {errorMsg && <ErrorMessage message={errorMsg} title="העדכון נכשל" compact />}
+      {tasksError && <ErrorMessage message={tasksError} title="טעינת המשימות נכשלה" compact />}
+      {subTasksError && selectedTask && <ErrorMessage message={subTasksError} title="טעינת תתי המשימות נכשלה" compact />}
       {selectedTask && (
         <SubTasksModal
           task={selectedTask}

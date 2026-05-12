@@ -2,21 +2,76 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import type { AuthState, LoginDTO, RegisterDTO } from "../../types";
 import API from "../../services/api";
 
+const normalizeAuthError = (message: string, status?: number) => {
+  const lower = message.toLowerCase();
+
+  if (
+    status === 409 ||
+    lower.includes("already exists") ||
+    lower.includes("already taken") ||
+    lower.includes("duplicate") ||
+    lower.includes("קיים")
+  ) {
+    if (lower.includes("email") || lower.includes("אימייל") || lower.includes("מייל")) {
+      return "האימייל כבר קיים במערכת. אפשר להתחבר או לבחור אימייל אחר.";
+    }
+    return "שם המשתמש כבר קיים במערכת. בחר שם משתמש אחר.";
+  }
+
+  return message;
+};
+
+const getErrorMessage = (err: any, fallback: string) => {
+  const data = err?.response?.data;
+  const status = err?.response?.status;
+
+  if (typeof data === "string" && data.trim()) {
+    return normalizeAuthError(data, status);
+  }
+
+  if (Array.isArray(data)) {
+    const message = data
+      .map((item) => (typeof item === "string" ? item : item?.description || item?.message || item?.error))
+      .filter(Boolean)
+      .join(" ");
+    if (message) return normalizeAuthError(message, status);
+  }
+
+  if (data?.errors && typeof data.errors === "object") {
+    const message = Object.values(data.errors)
+      .flat()
+      .filter(Boolean)
+      .join(" ");
+    if (message) return normalizeAuthError(message, status);
+  }
+
+  const message = data?.message || data?.error || data?.title || data?.detail || err?.message;
+  return message ? normalizeAuthError(message, status) : fallback;
+};
+
 // התחברות
 export const login = createAsyncThunk(
   "auth/login",
-  async (credentials: LoginDTO) => {
-    const response = await API.post("/auth/login", credentials);
-    return response.data;
+  async (credentials: LoginDTO, { rejectWithValue }) => {
+    try {
+      const response = await API.post("/auth/login", credentials);
+      return response.data;
+    } catch (err: any) {
+      return rejectWithValue(getErrorMessage(err, "האימייל או הסיסמה אינם נכונים"));
+    }
   }
 );
 
 // הרשמה
 export const register = createAsyncThunk(
   "auth/register",
-  async (credentials: RegisterDTO) => {
-    const response = await API.post("/auth/register", credentials);
-    return response.data;
+  async (credentials: RegisterDTO, { rejectWithValue }) => {
+    try {
+      const response = await API.post("/auth/register", credentials);
+      return response.data;
+    } catch (err: any) {
+      return rejectWithValue(getErrorMessage(err, "לא הצלחנו להשלים את ההרשמה"));
+    }
   }
 );
 
@@ -68,7 +123,7 @@ const authSlice = createSlice({
       })
       .addCase(login.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.error.message || "שגיאה בהתחברות";
+        state.error = (action.payload as string) || action.error.message || "שגיאה בהתחברות";
       })
 
       // Register
@@ -85,7 +140,7 @@ const authSlice = createSlice({
       })
       .addCase(register.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.error.message || "שגיאה בהרשמה";
+        state.error = (action.payload as string) || action.error.message || "שגיאה בהרשמה";
       })
 
       // fetchMe — שחזור יוזר אחרי רענון

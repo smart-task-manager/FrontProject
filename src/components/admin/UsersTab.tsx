@@ -4,6 +4,7 @@ import type { AppDispatch, RootState } from "../../store";
 import { deactivateUser, fetchUsers } from "../../store/slices/usersSlice";
 import { useToast } from "../ui/Toast";
 import { getErrorMessage } from "./utils";
+import ErrorMessage from "../ui/ErrorMessage";
 
 export default function UsersTab() {
   const dispatch = useDispatch<AppDispatch>();
@@ -16,16 +17,16 @@ export default function UsersTab() {
 
   const handleDeactivate = async (user: any) => {
     try {
-      await dispatch(deactivateUser(user)).unwrap();
-      notify("העובד הושבת", "success");
+      const result = await dispatch(deactivateUser(user)).unwrap();
+      notify((result as any).deleted ? "העובד נמחק בהצלחה" : "העובד הושבת בהצלחה", "success");
       await dispatch(fetchUsers());
     } catch (err: any) {
-      notify(getErrorMessage(err, "שגיאה בהשבתת עובד"), "error");
+      notify(getErrorMessage(err, "שגיאה במחיקת עובד"), "error");
     }
   };
 
   if (loading) return <div className="loading">טוען...</div>;
-  if (error) return <p style={{ color: "red" }}>{error}</p>;
+  if (error) return <ErrorMessage message={error} title="טעינת העובדים נכשלה" />;
 
   return (
     <div>
@@ -46,20 +47,24 @@ export default function UsersTab() {
           <tbody>
             {users
               .filter((user: any) => (user.role || user.Role) !== "admin")
-              .filter((user: any) => (user.isActive ?? user.IsActive) === true)
+              .filter((user: any) => (user.isActive ?? user.IsActive) !== false)
               .map((user: any) => (
                 <tr key={user.id || user.Id}>
-                  <td>{(user as any).nameUser ?? user.NameUser}</td>
+                  <td>{user.nameUser ?? user.NameUser}</td>
                   <td>{user.email || user.Email}</td>
-                  <td>{user.role === "admin" ? "מנהל" : "עובד"}</td>
+                  <td>{(user.role || user.Role) === "admin" ? "מנהל" : "עובד"}</td>
                   <td>
-                    <span className={`badge ${(user.isActive ?? user.IsActive) ? "badge-done" : "badge-canceled"}`}>
-                      {(user.isActive ?? user.IsActive) ? "פעיל" : "מושבת"}
+                    <span className={`badge ${(user.isActive ?? user.IsActive) !== false ? "badge-done" : "badge-canceled"}`}>
+                      {(user.isActive ?? user.IsActive) !== false ? "פעיל" : "מושבת"}
                     </span>
                   </td>
                   <td>
-                    <button className="btn btn-danger" onClick={() => handleDeactivate(user)} disabled={!(user.isActive ?? user.IsActive)}>
-                      השבת
+                    <button
+                      className="btn btn-danger"
+                      onClick={() => handleDeactivate(user)}
+                      disabled={(user.isActive ?? user.IsActive) === false}
+                    >
+                      מחק
                     </button>
                   </td>
                 </tr>

@@ -4,6 +4,7 @@ export interface User {
   Email: string;
   Password: string;
   role: "user" | "admin";
+  IsActive?: boolean;
 }
 
 export interface Task {

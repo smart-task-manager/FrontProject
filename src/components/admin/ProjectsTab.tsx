@@ -5,6 +5,7 @@ import { addProject, cancelProject, fetchProjects, updateProject } from "../../s
 import type { Project } from "../../types";
 import { useToast } from "../ui/Toast";
 import { getErrorMessage } from "./utils";
+import ErrorMessage from "../ui/ErrorMessage";
 
 function ProjectForm({
   onSubmit,
@@ -49,7 +50,7 @@ function ProjectForm({
 
   return (
     <form onSubmit={handleSubmit}>
-      {formError && <div style={{ color: "#dc2626", marginBottom: "10px" }}>{formError}</div>}
+      {formError && <ErrorMessage message={formError} title="בדיקת הטופס נכשלה" compact />}
       <div className="form-group">
         <label className="form-label">שם פרויקט</label>
         <input className="form-input" value={nameProject} onChange={(e) => setNameProject(e.target.value)} required />
@@ -126,7 +127,7 @@ export default function ProjectsTab() {
   };
 
   if (loading) return <div className="loading">טוען...</div>;
-  if (error) return <p style={{ color: "red" }}>{error}</p>;
+  if (error) return <ErrorMessage message={error} title="טעינת הפרויקטים נכשלה" />;
 
   return (
     <div>

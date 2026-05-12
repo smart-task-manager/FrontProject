@@ -21,8 +21,6 @@ API.interceptors.response.use(
       localStorage.removeItem("token");  // ✅ מוחק את הטוקן
       window.location.href = "/login";   // ✅ מנתב ללוגין
     }
-    // כאן אפשר להפעיל ספריית התראות (כמו react-toastify)
-    // alert(error.response?.data?.message || "התרחשה שגיאה בתקשורת עם השרת");
     return Promise.reject(error);
   }
 );

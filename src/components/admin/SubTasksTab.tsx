@@ -6,6 +6,7 @@ import { fetchTasks } from "../../store/slices/tasksSlice";
 import { fetchUsers } from "../../store/slices/usersSlice";
 import { useToast } from "../ui/Toast";
 import { getErrorMessage } from "./utils";
+import ErrorMessage from "../ui/ErrorMessage";
 
 function SubTaskForm({
   onSubmit,
@@ -68,7 +69,7 @@ function SubTaskForm({
 
   return (
     <form onSubmit={handleSubmit}>
-      {formError && <div style={{ color: "#dc2626", marginBottom: "10px" }}>{formError}</div>}
+      {formError && <ErrorMessage message={formError} title="בדיקת הטופס נכשלה" compact />}
       <div className="form-group">
         <label className="form-label">כותרת</label>
         <input className="form-input" value={title} onChange={(e) => setTitle(e.target.value)} required />
@@ -174,7 +175,7 @@ export default function SubTasksTab() {
   };
 
   if (loading) return <div className="loading">טוען...</div>;
-  if (error) return <p style={{ color: "red" }}>{error}</p>;
+  if (error) return <ErrorMessage message={error} title="טעינת תתי המשימות נכשלה" />;
 
   return (
     <div>

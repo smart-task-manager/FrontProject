@@ -5,6 +5,7 @@ import type { RootState, AppDispatch } from "../store";
 import { fetchTasks, updateTask } from "../store/slices/tasksSlice";
 import type { Task } from "../types";
 import { logout } from "../store/slices/authSlice";
+import ErrorMessage from "../components/ui/ErrorMessage";
 import SuccessToast from "../components/dashboard/SuccessToast";
 import TaskCard from "../components/dashboard/TaskCard";
 import {
@@ -32,6 +33,7 @@ const Dashboard: React.FC = () => {
 
   const [search, setSearch] = useState('');
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
   const [takenIds, setTakenIds] = useState<Set<number>>(new Set());
   const handleLogout = () => {
   dispatch(logout());
@@ -43,7 +45,7 @@ const Dashboard: React.FC = () => {
   }, [dispatch]);
   const handleTakeTask = async (task: Task) => {
     if (!user) {
-      alert('עליך להתחבר כדי לקחת משימה');
+      setActionError('עליך להתחבר כדי לקחת משימה');
       return;
     }
     const updatedTask: Task = {
@@ -83,7 +85,7 @@ const Dashboard: React.FC = () => {
 
   if (error) return (
     <div style={centerStyle}>
-      <p style={{ color: "#ef4444", fontSize: "0.95rem" }}>שגיאה: {error}</p>
+      <ErrorMessage message={error} title="טעינת המשימות נכשלה" />
     </div>
   );
 
@@ -93,6 +95,7 @@ const Dashboard: React.FC = () => {
       {successMsg && (
         <SuccessToast message={successMsg} onClose={() => setSuccessMsg(null)} />
       )}
+      {actionError && <ErrorMessage message={actionError} title="לא ניתן לקחת משימה" compact />}
 
       {/* Header */}
       <header style={headerStyle}>
@@ -105,6 +108,11 @@ const Dashboard: React.FC = () => {
           )}
         </div>
         <div style={{ display: "flex", gap: "12px" }}>
+          {user && (
+            <button onClick={() => navigate("/profile")} style={myTasksBtnStyle}>
+              הפרופיל שלי
+            </button>
+          )}
           {user && (
             <button onClick={() => navigate("/my-tasks")} style={myTasksBtnStyle}>
               המשימות שלי
