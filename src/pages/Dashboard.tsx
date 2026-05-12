@@ -241,21 +241,6 @@ const searchStyle: React.CSSProperties = {
   color: '#111',
 };
 
-const filterButtonsStyle: React.CSSProperties = {
-  display: 'flex', gap: '8px', flexWrap: 'wrap',
-};
-
-const filterBtnBase: React.CSSProperties = {
-  padding: '8px 16px',
-  border: '1px solid',
-  borderRadius: '20px',
-  fontSize: '0.82rem',
-  fontWeight: 500,
-  cursor: 'pointer',
-  transition: 'all 0.15s ease',
-  fontFamily: 'inherit',
-};
-
 const dividerStyle: React.CSSProperties = {
   height: '1px',
   background: '#f3f4f6',

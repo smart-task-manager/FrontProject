@@ -57,7 +57,7 @@ export const cancelSubTask = createAsyncThunk(
     async (subTask: any, { rejectWithValue }) => {
       try {
         const id = subTask.id || subTask.Id;
-        const response = await API.delete(`/SubTask/${id}`);
+        await API.delete(`/SubTask/${id}`);
         return { ...subTask, Status: 3, status: 3 };
       } catch (err: any) {
         return rejectWithValue(getErrorMessage(err, "שגיאה בביטול תת משימה"));

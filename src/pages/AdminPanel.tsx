@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useContext, createContext } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import type { AppDispatch, RootState } from "../store";
-import { fetchTasks, addTask, updateTask,cancelTask } from "../store/slices/tasksSlice";
-import { fetchSubTasks, addSubTask, updateSubTask,cancelSubTask } from "../store/slices/subTasksSlice";
+import { fetchTasks, addTask, updateTask, cancelTask } from "../store/slices/tasksSlice";
+import { fetchSubTasks, addSubTask, updateSubTask, cancelSubTask } from "../store/slices/subTasksSlice";
 import { fetchUsers ,deactivateUser} from "../store/slices/usersSlice";
 
 import { useNavigate } from "react-router-dom";
@@ -243,7 +243,7 @@ function ProjectsTab() {
   const { notify } = useToast();
   const { projects, loading, error } = useSelector((state: RootState) => state.projects);
   const [showAddModal, setShowAddModal] = useState(false);
-  const [editProject, setEditProject] = useState<Project | null>(null);
+  const [editProject, setEditProject] = useState<any>(null);
 
   useEffect(() => {
     dispatch(fetchProjects());
@@ -260,10 +260,11 @@ function ProjectsTab() {
     }
   };
 
-  const handleEdit = async (project: Project) => {
+  const handleEdit = async (project: any) => {
     try {
       await dispatch(updateProject(project)).unwrap();
       notify("הפרויקט עודכן בהצלחה", "success");
+      await dispatch(fetchProjects());
       setEditProject(null);
     } catch (err: any) {
       notify(getErrorMessage(err, "שגיאה בעדכון פרויקט"), "error");
@@ -304,6 +305,18 @@ function ProjectsTab() {
         </div>
       )}
 
+      {editProject && (
+        <div className="modal-overlay">
+          <div className="modal-card">
+            <div className="modal-header">
+              <h3 className="modal-title">עריכת פרויקט</h3>
+              <button className="modal-close" onClick={() => setEditProject(null)}>✕</button>
+            </div>
+            <ProjectForm initialData={editProject} onSubmit={handleEdit} onCancel={() => setEditProject(null)} />
+          </div>
+        </div>
+      )}
+
      
 
       <div className="table-wrapper">
@@ -336,6 +349,14 @@ function ProjectsTab() {
                   </span>
                 </td>
                 <td>
+                  <button
+                    className="btn btn-outline"
+                    onClick={() => setEditProject(project)}
+                    disabled={project.Status == 3}
+                    style={{ marginInlineEnd: "8px" }}
+                  >
+                    עריכה
+                  </button>
                   
                   <button
                     className="btn btn-danger"
@@ -359,27 +380,41 @@ function ProjectForm({ onSubmit, onCancel, initialData }: {
   onCancel: () => void;
   initialData?: Project;
 }) {
-  const [nameProject, setNameProject] = useState(initialData?.NameProject || "");
-  const [description, setDescription] = useState(initialData?.Description || "");
-  const [status, setStatus] = useState(initialData?.Status?.toString() || "0");
+  const [nameProject, setNameProject] = useState((initialData as any)?.nameProject || initialData?.NameProject || "");
+  const [description, setDescription] = useState((initialData as any)?.description || initialData?.Description || "");
+  const [status, setStatus] = useState(((initialData as any)?.status ?? initialData?.Status ?? 0).toString());
   const [deadline, setDeadline] = useState(
-    initialData?.Deadline
-      ? new Date(initialData.Deadline).toISOString().split("T")[0]
+    ((initialData as any)?.deadline || initialData?.Deadline)
+      ? new Date((initialData as any)?.deadline || initialData?.Deadline).toISOString().split("T")[0]
       : ""
   );
+  const [formError, setFormError] = useState<string | null>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!nameProject.trim()) {
+      setFormError("חובה להזין שם פרויקט");
+      return;
+    }
+    if (!deadline) {
+      setFormError("חובה לבחור דדליין");
+      return;
+    }
+    setFormError(null);
+
+    const id = (initialData as any)?.id ?? initialData?.Id;
     onSubmit({
-      NameProject: nameProject,
+      ...(id ? { Id: id } : {}),
+      NameProject: nameProject.trim(),
       Description: description,
       Status: parseInt(status) as any,
       Deadline: new Date(deadline),
-    });
+    } as any);
   };
 
   return (
     <form onSubmit={handleSubmit}>
+      {formError && <div style={{ color: "#dc2626", marginBottom: "10px" }}>{formError}</div>}
       <div className="form-group">
         <label className="form-label">שם פרויקט</label>
         <input
@@ -444,7 +479,7 @@ function TasksTab() {
   const getUserName = (id: number | null) => {
     if (!id) return "-";
     const user = users.find((u: any) => (u.id || u.Id) === id);
-    return user ? (user.nameUser || user.NameUser) : "-";
+    return user ? ((user as any).nameUser ?? user.NameUser) : "-";
   };
 
   const handleAdd = async (task: any) => {
@@ -503,6 +538,18 @@ function TasksTab() {
         </div>
       )}
 
+      {editTask && (
+        <div className="modal-overlay">
+          <div className="modal-card">
+            <div className="modal-header">
+              <h3 className="modal-title">עריכת משימה</h3>
+              <button className="modal-close" onClick={() => setEditTask(null)}>✕</button>
+            </div>
+            <TaskForm initialData={editTask} onSubmit={handleEdit} onCancel={() => setEditTask(null)} />
+          </div>
+        </div>
+      )}
+
       
 
       <div className="table-wrapper">
@@ -523,8 +570,8 @@ function TasksTab() {
             {tasks.filter((task: any) => (task.status ?? task.Status) !== 3)
             .map((task: any) => (
               <tr key={task.id || task.Id}>
-                <td>{task.title || task.Title}</td>
-                <td>{task.description || task.Description}</td>
+                <td>{(task as any).title ?? task.Title}</td>
+                <td>{(task as any).description ?? task.Description}</td>
                 <td>{task.projectName || task.ProjectName || "-"}</td>
                 <td>{getUserName(task.assignedTo ?? task.AssignedTo)}</td>
                 <td>
@@ -551,6 +598,14 @@ function TasksTab() {
                 </td>
                 <td>{task.deadline ? new Date(task.deadline).toLocaleDateString("he-IL") : "-"}</td>
                 <td>
+                  <button
+                    className="btn btn-outline"
+                    onClick={() => setEditTask(task)}
+                    disabled={(task.status ?? task.Status) === 3}
+                    style={{ marginInlineEnd: "8px" }}
+                  >
+                    עריכה
+                  </button>
                   
                   <button
                     className="btn btn-danger"
@@ -579,46 +634,82 @@ function TaskForm({ onSubmit, onCancel, initialData }: {
   const [title, setTitle] = useState(initialData?.title || initialData?.Title || "");
   const [description, setDescription] = useState(initialData?.description || initialData?.Description || "");
   const projects = useSelector((state: RootState) => state.projects.projects);
-  const [projectId, setProjectId] = useState(initialData?.projectId || 0);
-  const [priority, setPriority] = useState(initialData?.priority?.toString() || "0");
-  const [expected, setExpected] = useState(initialData?.expected || 1);
-  const [status, setStatus] = useState(initialData?.status?.toString() || initialData?.Status?.toString() || "0");
-  const [error, setError] = useState<string | null>(null);
+  const { users } = useSelector((state: RootState) => state.users);
+  const [projectId, setProjectId] = useState(initialData?.projectId || initialData?.ProjectId || 0);
+  const [expected, setExpected] = useState(initialData?.expected || initialData?.Expected || 1);
+  const [priority, setPriority] = useState(((initialData?.priority ?? initialData?.Priority ?? 0) as number).toString());
+  const [status, setStatus] = useState(((initialData?.status ?? initialData?.Status ?? 0) as number).toString());
+  const [assignedTo, setAssignedTo] = useState<number | null>(
+    initialData?.assignedTo ?? initialData?.AssignedTo ?? null
+  );
   const [deadline, setDeadline] = useState(
     (initialData?.deadline || initialData?.Deadline)
       ? new Date(initialData.deadline || initialData.Deadline).toISOString().split("T")[0]
       : ""
   );
+  const [formError, setFormError] = useState<string | null>(null);
 
 const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    try {
+    if (!title.trim()) {
+      setFormError("חובה להזין כותרת");
+      return;
+    }
+    if (!projectId) {
+      setFormError("חובה לבחור פרויקט");
+      return;
+    }
+    if (!deadline) {
+      setFormError("חובה לבחור דדליין");
+      return;
+    }
+    if (!expected || expected < 1) {
+      setFormError("זמן משוער חייב להיות לפחות 1");
+      return;
+    }
+    setFormError(null);
+
     // 1. מחפשים את הפרויקט הנבחר מתוך רשימת הפרויקטים כדי לחלץ את השם שלו
     const selectedProject = projects.find((p: any) => (p.id || p.Id) === projectId);
     
     // 2. שומרים את השם (בודקים גם את האפשרות של אות גדולה או קטנה)
-    const projectName = selectedProject ? (selectedProject.nameProject || selectedProject.NameProject) : "";
+    const projectName = selectedProject ? ((selectedProject as any).nameProject ?? selectedProject.NameProject) : "";
 
-    // 3. שולחים את האובייקט המלא כולל השדה שהיה חסר
-    onSubmit({
-      projectId: projectId,
-      projectName: projectName, // השדה שהשרת צעק עליו שהוא חסר
-      title: title,
-      description: description,
-      priority: parseInt(priority),
-      status: 0,
-      deadline: new Date(deadline),
-      //startedAt: new Date(),
-      expected: expected,
-      assignedTo: null,
-    });
-    } catch (err: any) {
-      setError(getErrorMessage(err, "שגיאה ביצירת המשימה"));
+    const id = initialData?.id ?? initialData?.Id;
+    if (id) {
+      onSubmit({
+        Id: id,
+        ProjectId: projectId,
+        ProjectName: projectName,
+        Title: title.trim(),
+        Description: description,
+        Expected: expected,
+        AssignedTo: assignedTo,
+        Priority: parseInt(priority),
+        Status: parseInt(status),
+        StartedAt: initialData?.startedAt || initialData?.StartedAt || new Date(),
+        Deadline: new Date(deadline),
+      });
+      return;
     }
+
+    // Add (צורת ה-API אצל השרת)
+    onSubmit({
+      projectId,
+      projectName,
+      title: title.trim(),
+      description,
+      priority: parseInt(priority),
+      status: parseInt(status),
+      deadline: new Date(deadline),
+      expected,
+      assignedTo,
+    });
   };
 
   return (
     <form onSubmit={handleSubmit}>
+      {formError && <div style={{ color: "#dc2626", marginBottom: "10px" }}>{formError}</div>}
       <div className="form-group">
         <label className="form-label">כותרת</label>
         <input className="form-input" value={title} onChange={e => setTitle(e.target.value)} required />
@@ -633,11 +724,46 @@ const handleSubmit = (e: React.FormEvent) => {
             <option value="">בחר פרויקט</option>
             {projects.map((p: any) => (
             <option key={p.id || p.Id} value={p.id || p.Id}>
-                {p.nameProject || p.NameProject}
+                {(p as any).nameProject ?? p.NameProject}
             </option>
             ))}
         </select>
         </div>
+
+      <div className="form-group">
+        <label className="form-label">עובד אחראי</label>
+        <select
+          className="form-input"
+          value={assignedTo ?? ""}
+          onChange={(e) => setAssignedTo(e.target.value ? parseInt(e.target.value) : null)}
+        >
+          <option value="">לא משויך</option>
+          {users.map((u: any) => (
+            <option key={u.id || u.Id} value={u.id || u.Id}>
+              {(u as any).nameUser ?? u.NameUser}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div className="form-group">
+        <label className="form-label">עדיפות</label>
+        <select className="form-input" value={priority} onChange={e => setPriority(e.target.value)}>
+          <option value="0">נמוכה</option>
+          <option value="1">בינונית</option>
+          <option value="2">גבוהה</option>
+        </select>
+      </div>
+
+      <div className="form-group">
+        <label className="form-label">סטטוס</label>
+        <select className="form-input" value={status} onChange={e => setStatus(e.target.value)}>
+          <option value="0">פתוח</option>
+          <option value="1">בביצוע</option>
+          <option value="2">הושלם</option>
+          <option value="3">בוטל</option>
+        </select>
+      </div>
       
       <div className="form-group">
   <label className="form-label">זמן משוער (בימים)</label>
@@ -677,7 +803,7 @@ function SubTasksTab() {
   const getUserName = (id: number | null) => {
   if (!id) return "-";
   const user = users.find((u: any) => (u.id || u.Id) === id);
-  return user ? (user.nameUser || user.NameUser) : "-";
+  return user ? ((user as any).nameUser ?? user.NameUser) : "-";
 };
   const handleAdd = async (task: any) => {
     try {
@@ -735,6 +861,18 @@ function SubTasksTab() {
         </div>
       )}
 
+      {editSubTask && (
+        <div className="modal-overlay">
+          <div className="modal-card">
+            <div className="modal-header">
+              <h3 className="modal-title">עריכת תת משימה</h3>
+              <button className="modal-close" onClick={() => setEditSubTask(null)}>✕</button>
+            </div>
+            <SubTaskForm initialData={editSubTask} onSubmit={handleEdit} onCancel={() => setEditSubTask(null)} />
+          </div>
+        </div>
+      )}
+
      
 
       <div className="table-wrapper">
@@ -753,8 +891,8 @@ function SubTasksTab() {
   {subTasks.filter((subTask: any) => (subTask.status ?? subTask.Status) !== 3)
   .map((subTask: any) => (
     <tr key={subTask.id || subTask.Id}>
-      <td>{subTask.title || subTask.Title}</td>
-      <td>{subTask.description || subTask.Description}</td>
+      <td>{(subTask as any).title ?? subTask.Title}</td>
+      <td>{(subTask as any).description ?? subTask.Description}</td>
       <td>{subTask.taskName || subTask.TaskName}</td>
       <td>{getUserName(subTask.assignedTo ?? subTask.AssignedTo)}</td>
       <td>
@@ -770,6 +908,14 @@ function SubTasksTab() {
         </span>
       </td>
       <td>
+        <button
+          className="btn btn-outline"
+          onClick={() => setEditSubTask(subTask)}
+          disabled={(subTask.status ?? subTask.Status) === 3}
+          style={{ marginInlineEnd: "8px" }}
+        >
+          עריכה
+        </button>
         
         <button
           className="btn btn-danger"
@@ -794,6 +940,7 @@ function SubTaskForm({ onSubmit, onCancel, initialData }: {
 }) {
   const dispatch = useDispatch<AppDispatch>();
   const { tasks } = useSelector((state: RootState) => state.tasks);
+  const { users } = useSelector((state: RootState) => state.users);
 
   useEffect(() => {
     dispatch(fetchTasks());
@@ -801,8 +948,12 @@ function SubTaskForm({ onSubmit, onCancel, initialData }: {
 
   const [title, setTitle] = useState(initialData?.title || initialData?.Title || "");
   const [description, setDescription] = useState(initialData?.description || initialData?.Description || "");
-  const [taskId, setTaskId] = useState(initialData?.taskId || 0);
-  const [status, setStatus] = useState(initialData?.status?.toString() || "0");
+  const [taskId, setTaskId] = useState(initialData?.taskId || initialData?.TaskId || 0);
+  const [status, setStatus] = useState(((initialData?.status ?? initialData?.Status ?? 0) as number).toString());
+  const [assignedTo, setAssignedTo] = useState<number | null>(
+    initialData?.assignedTo ?? initialData?.AssignedTo ?? null
+  );
+  const [formError, setFormError] = useState<string | null>(null);
   /*const [deadline, setDeadline] = useState(
     (initialData?.deadline || initialData?.Deadline)
       ? new Date(initialData.deadline || initialData.Deadline).toISOString().split("T")[0]
@@ -811,21 +962,45 @@ function SubTaskForm({ onSubmit, onCancel, initialData }: {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!title.trim()) {
+      setFormError("חובה להזין כותרת");
+      return;
+    }
+    if (!taskId) {
+      setFormError("חובה לבחור משימה");
+      return;
+    }
+    setFormError(null);
     const selectedTask = tasks.find((t: any) => (t.id || t.Id) === taskId);
-const taskName = selectedTask ? (selectedTask.title || selectedTask.Title) : "";
+const taskName = selectedTask ? ((selectedTask as any).title ?? selectedTask.Title) : "";
+    const id = initialData?.id ?? initialData?.Id;
+    if (id) {
+      onSubmit({
+        Id: id,
+        TaskId: taskId,
+        TaskName: taskName,
+        Title: title.trim(),
+        Description: description,
+        AssignedTo: assignedTo ?? 0,
+        Status: parseInt(status),
+        Deadline: initialData?.deadline || initialData?.Deadline || new Date(),
+      });
+      return;
+    }
+
     onSubmit({
       taskId,
-      taskName: taskName, 
-      title,
+      taskName,
+      title: title.trim(),
       description,
       status: parseInt(status),
-      //deadline: new Date(deadline),
-      assignedTo:null,
+      assignedTo,
     });
   };
 
   return (
     <form onSubmit={handleSubmit}>
+      {formError && <div style={{ color: "#dc2626", marginBottom: "10px" }}>{formError}</div>}
       <div className="form-group">
         <label className="form-label">כותרת</label>
         <input className="form-input" value={title} onChange={e => setTitle(e.target.value)} required />
@@ -841,7 +1016,23 @@ const taskName = selectedTask ? (selectedTask.title || selectedTask.Title) : "";
           {tasks.filter((t: any) => (t.status ?? t.Status) !== 3 && (t.status ?? t.Status) !== 2)  // ✅ לא מבוטלות ולא מושלמות
           .map((t: any) => (
             <option key={t.id || t.Id} value={t.id || t.Id}>
-              {t.title || t.Title}
+              {(t as any).title ?? t.Title}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div className="form-group">
+        <label className="form-label">עובד אחראי</label>
+        <select
+          className="form-input"
+          value={assignedTo ?? ""}
+          onChange={(e) => setAssignedTo(e.target.value ? parseInt(e.target.value) : null)}
+        >
+          <option value="">לא משויך</option>
+          {users.map((u: any) => (
+            <option key={u.id || u.Id} value={u.id || u.Id}>
+              {(u as any).nameUser ?? u.NameUser}
             </option>
           ))}
         </select>
@@ -942,7 +1133,7 @@ function UsersTab() {
                 .filter((user: any) => (user.isActive ?? user.IsActive) === true)
                 .map((user: any) => (
               <tr key={user.id || user.Id}>
-                <td>{user.nameUser || user.NameUser}</td>
+                <td>{(user as any).nameUser ?? user.NameUser}</td>
                 <td>{user.email || user.Email}</td>
                 <td>{user.role === "admin" ? "מנהל" : "עובד"}</td>
                 <td>
@@ -1001,7 +1192,7 @@ function HistoryTab() {
   // התקדמות משימות
   const taskStats = tasks.map((t: any) => {
     const taskId = t.Id ?? t.id;
-    const title = t.Title ?? t.title;
+    const title = t.Title ?? (t as any).title;
     const mySubTasks = subTasks.filter((s: any) => (s.taskId || s.TaskId) === taskId);
     const completed = mySubTasks.filter((s: any) => (s.status ?? s.Status) === 2).length;
     const total = mySubTasks.length;

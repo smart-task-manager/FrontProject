@@ -65,7 +65,7 @@ export const cancelTask = createAsyncThunk(
     "tasks/cancel",
     async (task: Task, { rejectWithValue }) => {
       try {
-        const response = await API.delete(`/TaskItem/${task.Id}`);
+        await API.delete(`/TaskItem/${task.Id}`);
         return { ...task, Status: 3 };
       } catch (err: any) {
 
@@ -145,21 +145,9 @@ const tasksSlice = createSlice({
         if (index !== -1) state.tasks[index] = mapped;
       })
       .addCase(cancelTask.fulfilled, (state, action) => {
-  const t = action.payload;
-  const index = state.tasks.findIndex(task => task.Id === t.id);
-  if (index !== -1) state.tasks[index] = {
-    Id: t.id,
-    ProjectId: t.projectId,
-    ProjectName: t.projectName,
-    Title: t.title,
-    Description: t.description,
-    Expected: t.expected,
-    AssignedTo: t.assignedTo,
-    Priority: t.priority,
-    Status: t.status,
-    StartedAt: t.startedAt,
-    Deadline: t.deadline,
-  };
+  const t = action.payload as Task;
+  const index = state.tasks.findIndex(task => task.Id === t.Id);
+  if (index !== -1) state.tasks[index] = t;
 })
   },
 });
